@@ -80,7 +80,15 @@ export default function DataTable({
                     </td>
                   ))}
                   <td className="col-actions">
-                    <button className="tiny danger ghost" title="Eliminar fila" onClick={() => onDeleteRow(idx)}>
+                    <button
+                      className="tiny danger ghost"
+                      title="Eliminar fila"
+                      onClick={() => {
+                        if (window.confirm('¿Seguro que quieres eliminar esta fila? Se puede recuperar desde el backup, pero no hay deshacer inmediato.')) {
+                          onDeleteRow(idx);
+                        }
+                      }}
+                    >
                       ✕
                     </button>
                   </td>

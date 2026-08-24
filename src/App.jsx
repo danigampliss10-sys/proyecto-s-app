@@ -82,6 +82,10 @@ export default function App() {
   const handleImportFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!window.confirm('Esto reemplaza TODO el documento actual por el contenido del archivo. ¿Seguro?')) {
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
