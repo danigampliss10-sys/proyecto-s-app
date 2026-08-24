@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { getStoredEditorName, saveEditorName } from './editorName';
 import { defaultData, TABLE_CONFIG } from './defaultData';
 import { useCloudSync } from './useCloudSync';
 import { supabaseConfigured } from './supabaseClient';
@@ -29,7 +30,13 @@ export default function App() {
     toastTimerRef.current = setTimeout(() => setToast(null), 2200);
   }, []);
 
-  const syncStatus = useCloudSync(data, setData, showToast);
+  const [editorName, setEditorName] = useState(getStoredEditorName);
+  const [nameDraft, setNameDraft] = useState('');
+  const syncStatus = useCloudSync(data, setData, showToast, editorName);
+
+  const confirmName = () => {
+    setEditorName(saveEditorName(nameDraft));
+  };
 
   const updateStatic = useCallback((id, html) => {
     setData((prev) => ({ ...prev, estatico: { ...prev.estatico, [id]: html } }));
@@ -263,6 +270,25 @@ export default function App() {
       <EditableHtml as="footer" singleLine html={data.estatico.footer} onChange={(h) => updateStatic('footer', h)} />
 
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
+
+      {!editorName && (
+        <div className="name-modal-backdrop">
+          <div className="name-modal">
+            <h2>¿Cómo te llamas?</h2>
+            <p>Se usa solo para el registro interno de cambios, no aparece en la web.</p>
+            <input
+              autoFocus
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && nameDraft.trim() && confirmName()}
+              placeholder="Tu nombre"
+            />
+            <button className="primary" disabled={!nameDraft.trim()} onClick={confirmName}>
+              Continuar
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

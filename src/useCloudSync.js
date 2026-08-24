@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase, supabaseConfigured } from './supabaseClient';
 
 const TABLE = 'proyecto_s';
+const LOG_TABLE = 'proyecto_s_log';
 const ROW_ID = 1;
 const WRITE_DEBOUNCE_MS = 600;
 
@@ -16,7 +17,7 @@ function isTyping() {
    Escribe en la nube con un pequeño debounce tras cada cambio, y aplica los cambios
    que lleguen de otros usuarios en tiempo real — salvo que estés escribiendo en ese
    momento, en cuyo caso se aplican en cuanto sueltas el campo (blur). */
-export function useCloudSync(data, setData, showToast) {
+export function useCloudSync(data, setData, showToast, editorName) {
   const [status, setStatus] = useState(supabaseConfigured ? 'connecting' : 'offline');
   const suppressRef = useRef(false);
   const lastSyncedRef = useRef(null);
@@ -113,7 +114,11 @@ export function useCloudSync(data, setData, showToast) {
     writeTimerRef.current = setTimeout(async () => {
       lastSyncedRef.current = str;
       const { error } = await supabase.from(TABLE).update({ content: data }).eq('id', ROW_ID);
-      if (error) setStatus('offline');
+      if (error) {
+        setStatus('offline');
+        return;
+      }
+      supabase.from(LOG_TABLE).insert({ editor: editorName || 'Desconocido', content: data }).then(() => {});
     }, WRITE_DEBOUNCE_MS);
     return () => clearTimeout(writeTimerRef.current);
   }, [data]);
